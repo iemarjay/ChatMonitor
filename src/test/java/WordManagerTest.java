@@ -2,6 +2,7 @@ import static org.junit.Assert.*;
 
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.logging.Logger;
 
 import static java.util.Arrays.asList;
 
@@ -14,7 +15,7 @@ public class WordManagerTest {
 	@Test
 	public void testValidAndEmptyWordMatches() throws Exception {
 		WordManager wordManager = new WordManager(
-			Paths.get("src","test","resources", "validrules"), "test_"
+			Paths.get("src","test","resources", "validrules"), "test_", Logger.getLogger("chat_monitor")
 		);
 		WordAction action = null;
 
@@ -33,8 +34,8 @@ public class WordManagerTest {
 	@Test
 	public void testEmptyLists() throws Exception {
 		WordManager wordManager = new WordManager(
-				Paths.get("src","test","resources", "emptylist"), "test_"
-			);
+				Paths.get("src","test","resources", "emptylist"), "test_", Logger.getLogger("chat_monitor")
+		);
 		WordAction action = null;
 		
 		action = wordManager.processAllWords("this should be skipped gracefully since there are no words in this list");
@@ -44,7 +45,7 @@ public class WordManagerTest {
 	@Test
 	public void testInvalidRules() {
 		WordManager wordManager = new WordManager(
-			Paths.get("src","test","resources", "invalidrule"), "test_"
+			Paths.get("src","test","resources", "invalidrule"), "test_", Logger.getLogger("chat_monitor")
 		);
 		
 		try {
@@ -57,7 +58,7 @@ public class WordManagerTest {
 	@Test
 	public void testMatchesInCommands() throws Exception {
 		WordManager wordManager = new WordManager(
-			Paths.get("src","test","resources", "commands"), "test_"
+			Paths.get("src","test","resources", "commands"), "test_", Logger.getLogger("chat_monitor")
 		);
 		WordAction action = null;
 

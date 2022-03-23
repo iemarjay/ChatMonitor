@@ -1,49 +1,42 @@
 package io.github.mooeypoo.chatmonitor.words;
 
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
-
-import org.bukkit.plugin.java.JavaPlugin;
 
 import io.github.mooeypoo.chatmonitor.configs.ConfigManager;
 import io.github.mooeypoo.chatmonitor.configs.ConfigurationException;
 import io.github.mooeypoo.chatmonitor.configs.GroupConfigInterface;
 
 public class WordManager {
+	private Logger logger;
 	private HashMap<String, String> wordmap = new HashMap<>();
 	private HashMap<String, ArrayList<String>> mapWordsInCommands = new HashMap<>();
 	private ArrayList<String> allwords = new ArrayList<>();
 	private ArrayList<String> relevantCommands = new ArrayList<>();
-	private JavaPlugin plugin;
 	private ConfigManager configManager;
-	
-	public WordManager(JavaPlugin plugin) {
-		this.plugin = plugin;
-		try {
-			this.configManager = new ConfigManager(Paths.get(this.plugin.getDataFolder().getPath()), "ChatMonitor_wordgroup");
-		} catch (ConfigurationException e) {
-			this.plugin.getLogger().warning("Initiation aborted for ChatMonitor. Error in configuration file '" + e.getConfigFileName() + "': " + e.getMessage());
-			return;
-		}
-		this.collectWords();
+
+	public WordManager(Path filepath, Logger logger) {
+		this(filepath, "ChatMonitor_wordgroup", logger);
 	}
 	
 	// Used for testing
-	public WordManager(Path filepath, String prefix) {
+	public WordManager(Path filepath, String prefix, Logger logger) {
 		try {
+			this.logger = logger;
 			this.configManager = new ConfigManager(filepath, prefix);
+			this.collectWords();
 		} catch (ConfigurationException e) {
-			this.plugin.getLogger().warning("Initiation aborted for ChatMonitor. Error in configuration file '" + e.getConfigFileName() + "': " + e.getMessage());
-			return;
+			// Todo: bubble exception to caller
+			this.logger.warning("Initiation aborted for ChatMonitor. Error in configuration file '" + e.getConfigFileName() + "': " + e.getMessage());
+
 		}
-		this.collectWords();
 	}
 	/**
 	 * Reload the lists and re-process the groups from the config files.
@@ -59,7 +52,7 @@ public class WordManager {
 		try {
 			this.configManager.reload();
 		} catch (ConfigurationException e) {
-			this.plugin.getLogger().warning("Reload loading default config. Error in configuration file '" + e.getConfigFileName() + "': " + e.getMessage());
+			logger.warning("Reload loading default config. Error in configuration file '" + e.getConfigFileName() + "': " + e.getMessage());
 		}
 
 		// Redo word collection
@@ -72,7 +65,6 @@ public class WordManager {
 	 *
 	 * @param chatMessage Given message
 	 * @return Details of the matched word from any of the groups, or null if none was matched.
-	 * @throws Exception 
 	 */
 	public WordAction processAllWords(String chatMessage) throws Exception {
 		String[] matched = this.getMatchedWord(chatMessage, this.allwords);
@@ -120,7 +112,7 @@ public class WordManager {
 			try {
 				groupConfig = this.configManager.getGroupConfigData(groupName);
 			} catch (ConfigurationException e) {
-				this.plugin.getLogger().warning("Word group loading defaults. Error in configuration file '" + e.getConfigFileName() + "': " + e.getMessage());
+				logger.warning("Word group loading defaults. Error in configuration file '" + e.getConfigFileName() + "': " + e.getMessage());
 			}
 			// Collect all words from the config group
 			this.allwords.addAll(groupConfig.words());
@@ -200,7 +192,7 @@ public class WordManager {
 					group
 			);
 		} catch (ConfigurationException e) {
-			this.plugin.getLogger().warning("Aborting generating action. Error in configuration file '" + e.getConfigFileName() + "': " + e.getMessage());
+			logger.warning("Aborting generating action. Error in configuration file '" + e.getConfigFileName() + "': " + e.getMessage());
 			return null;
 		}
 	}
