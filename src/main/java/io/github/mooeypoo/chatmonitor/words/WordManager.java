@@ -4,6 +4,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -16,10 +17,10 @@ import io.github.mooeypoo.chatmonitor.configs.GroupConfigInterface;
 
 public class WordManager {
 	private Logger logger;
-	private HashMap<String, String> wordmap = new HashMap<>();
-	private HashMap<String, ArrayList<String>> mapWordsInCommands = new HashMap<>();
-	private ArrayList<String> allwords = new ArrayList<>();
-	private ArrayList<String> relevantCommands = new ArrayList<>();
+	private Map<String, String> wordmap = new HashMap<>();
+	private Map<String, ArrayList<String>> mapWordsInCommands = new HashMap<>();
+	private List<String> allwords = new ArrayList<>();
+	private List<String> relevantCommands = new ArrayList<>();
 	private ConfigManager configManager;
 
 	public WordManager(Path filepath, Logger logger) {
@@ -67,7 +68,7 @@ public class WordManager {
 	 * @return Details of the matched word from any of the groups, or null if none was matched.
 	 */
 	public WordAction processAllWords(String chatMessage) throws Exception {
-		String[] matched = this.getMatchedWord(chatMessage, this.allwords);
+		String[] matched = this.getMatchedWord(chatMessage, this.getAllWords());
 
 		if (matched == null) {
 			return null;
@@ -108,25 +109,25 @@ public class WordManager {
 		Set<String> groups = this.configManager.getGroupNames();
 
 		for (String groupName : groups) {
-			GroupConfigInterface groupConfig = null;
 			try {
-				groupConfig = this.configManager.getGroupConfigData(groupName);
+				GroupConfigInterface groupConfig = this.configManager.getGroupConfigData(groupName);
+
+				for (String word : groupConfig.words()) {
+					// Save in the word map, so we can find the group from the matched word
+					this.wordmap.put(word, groupName);
+
+					// Check if there are commands that this word should be tested against
+					// and add those to the commands map
+					this.collectCommandMap(word, groupConfig.includeCommands());
+				}
 			} catch (ConfigurationException e) {
 				logger.warning("Word group loading defaults. Error in configuration file '" + e.getConfigFileName() + "': " + e.getMessage());
 			}
-			// Collect all words from the config group
-			this.allwords.addAll(groupConfig.words());
-
-			for (String word : groupConfig.words()) {
-				// Save in the word map so we can find the group from the matched word
-				this.wordmap.put(word, groupName);
-				
-				// Check if there are commands that this word should be tested against
-				// and add those to the commands map
-				this.collectCommandMap(word, groupConfig.includeCommands());
-			}
-	
 		}
+	}
+
+	private List<String> getAllWords() {
+		return new ArrayList<String>(this.wordmap.keySet());
 	}
 	
 	/**
