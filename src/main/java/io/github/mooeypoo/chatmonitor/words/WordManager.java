@@ -3,6 +3,7 @@ package io.github.mooeypoo.chatmonitor.words;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -11,6 +12,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
+import javax.annotation.Nonnull;
+
 import io.github.mooeypoo.chatmonitor.configs.ConfigManager;
 import io.github.mooeypoo.chatmonitor.configs.ConfigurationException;
 import io.github.mooeypoo.chatmonitor.configs.GroupConfigInterface;
@@ -18,8 +21,7 @@ import io.github.mooeypoo.chatmonitor.configs.GroupConfigInterface;
 public class WordManager {
 	private Logger logger;
 	private Map<String, String> wordmap = new HashMap<>();
-	private Map<String, ArrayList<String>> mapWordsInCommands = new HashMap<>();
-	private List<String> allwords = new ArrayList<>();
+	private Map<String, Set<String>> mapWordsInCommands = new HashMap<>();
 	private List<String> relevantCommands = new ArrayList<>();
 	private ConfigManager configManager;
 
@@ -45,7 +47,6 @@ public class WordManager {
 	public void reload() {
 		// Reset lists
 		this.wordmap.clear();
-		this.allwords.clear();
 		this.mapWordsInCommands.clear();
 		this.relevantCommands.clear();
 		
@@ -91,7 +92,7 @@ public class WordManager {
 			return null;
 		}
 
-		ArrayList<String> wordListForThisCommand = this.mapWordsInCommands.get(commandName);
+		Set<String> wordListForThisCommand = this.mapWordsInCommands.get(commandName);
 		
 		String[] matched = this.getMatchedWord(fullmessage, wordListForThisCommand);
 		if (matched == null) {
@@ -126,8 +127,8 @@ public class WordManager {
 		}
 	}
 
-	private List<String> getAllWords() {
-		return new ArrayList<String>(this.wordmap.keySet());
+	private Set<String> getAllWords() {
+		return this.wordmap.keySet();
 	}
 	
 	/**
@@ -145,7 +146,7 @@ public class WordManager {
 				continue;
 			}
 			// For each command, get the existing list first
-			ArrayList<String> wordListForThisCommand = mapWordsInCommands.computeIfAbsent(includedCmd, s -> new ArrayList<>());
+			Set<String> wordListForThisCommand = mapWordsInCommands.computeIfAbsent(includedCmd, s -> new HashSet<>());
 			
 			// Add the word into the command map, if the word doesn't already exist in it
 			if (!wordListForThisCommand.contains(word)) {
@@ -203,24 +204,20 @@ public class WordManager {
 	 * and return the matching word.
 	 *
 	 * @param givenString Given string
-	 * @param wordList A word list to test against
+	 * @param ruleList A word list to test against
 	 * @return An array that contains the matching term and original word that was matched,
 	 *  or null if none was matched.
 	 * @throws Exception 
 	 */
-	private String[] getMatchedWord(String givenString, List<String> wordList) throws Exception {
-    	Matcher matcher;
-		if (wordList == null || wordList.isEmpty()) {
-			return null;
-		}
-		
-		// Transform to owercase for the match test
+	private String[] getMatchedWord(String givenString, @Nonnull Set<String> ruleList) throws Exception {
+		// Transform to lowercase for the match test
 		String testString = givenString.toLowerCase();
+
     	// Check if the string has any of the words in the wordlist
-		for (String rule : wordList) {
+		for (String rule : ruleList) {
 			try {
 	    		Pattern pattern = Pattern.compile(rule);
-	    		matcher = pattern.matcher(testString);
+	    		Matcher matcher = pattern.matcher(testString);
 	    		if (matcher.find()) {
 	    			return new String[] { rule, matcher.group() };
 	    		}
