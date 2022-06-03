@@ -75,7 +75,7 @@ public class WordManager {
 			return null;
 		}
 		
-		return this.getWordAction(matched);
+		return this.getWordAction(matched[0], matched[1]);
 	}
 
 	/**
@@ -99,7 +99,7 @@ public class WordManager {
 			return null;
 		}
 
-		return this.getWordAction(matched);
+		return this.getWordAction(matched[0], matched[1]);
 	}
 	
 	/**
@@ -140,40 +140,24 @@ public class WordManager {
 	 * @param commandsInGroup A set of the commands in the group
 	 */
 	private void collectCommandMap(String word, Set<String> commandsInGroup) {
-		for (String includedCmd : commandsInGroup) {
-			if (includedCmd == null || includedCmd.isBlank()) {
-				// Skip empty lines
-				continue;
-			}
-			// For each command, get the existing list first
-			Set<String> wordListForThisCommand = mapWordsInCommands.computeIfAbsent(includedCmd, s -> new HashSet<>());
-			
-			// Add the word into the command map, if the word doesn't already exist in it
-			if (!wordListForThisCommand.contains(word)) {
-				wordListForThisCommand.add(word);
-			}
-
-		}
-
+		commandsInGroup.stream()
+				.filter(command -> !(command == null || command.isBlank()))
+				.forEach(command -> mapWordsInCommands.computeIfAbsent(command, s -> new HashSet<>()).add(word));
 	}
 
 	/**
 	 * Produce a WordAction type response from a given word,
 	 * based on details of its group and individual config.
 	 *
-	 * @param matched An array 
-	 * @return     Details about the matched word 
+	 * @param matchedRule
+	 * @param originalWord
+	 * @return     Details about the matched word
 	 */
-	private WordAction getWordAction(String[] matched) {
-		if (matched.length < 2) {
-			return null;
-		}
-		String matchedRule = matched[0];
-		String originalWord = matched[1];
+	private WordAction getWordAction(String matchedRule, String originalWord) {
 		// Find the group this word is in
 		String group = this.wordmap.get(matchedRule);
 		if (group == null) {
-			return null;
+			return null; // Todo: throw exception
 		}
 
 		try {
