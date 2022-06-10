@@ -13,10 +13,10 @@ broadcast: false
  # If words are added plainly, they will match anywhere in the string. Example: 'foo' will match 'food' and 'blafoo'.
  # For comlpex behavior, like limiting word boundaries and alternative spellings, see regular expression documentation,
  # and visit the ChatMonitor wiki for example lists.
-words:
+words: []
  # A list of commands the plugin should look into when searching for word matches. Do not include the slash (Example: - tell)
 includecommands:
-  -  'tell'
+  - 'tell'
  # If there was a word match, this potion dictates whether the message that triggered
  # the match is allowed to be sent to the chat. If the option is false, the message that
  # contained a matched word will be muted and not appear in chat, and, if it was used in a
@@ -30,4 +30,4 @@ preventsend: false
  # - %word% the word that was caught
  # - %matchrule% the rule (in the list below) that was triggered on the matched word
 runcommands:
-  -  ''
+  - ''

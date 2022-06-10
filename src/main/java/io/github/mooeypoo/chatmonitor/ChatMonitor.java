@@ -15,6 +15,7 @@ import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import io.github.mooeypoo.chatmonitor.commands.ChatMonitorCommandExecutor;
+import io.github.mooeypoo.chatmonitor.configs.ConfigurationException;
 import io.github.mooeypoo.chatmonitor.utils.MessageHandler;
 import io.github.mooeypoo.chatmonitor.utils.UpdateChecker;
 import io.github.mooeypoo.chatmonitor.words.WordAction;
@@ -54,7 +55,12 @@ public class ChatMonitor extends JavaPlugin implements Listener {
 		
 		// Initialize word list and config
 		this.getLogger().info("Initializing word lists...");
-		this.wordmanager = new WordManager(Paths.get(this.getDataFolder().getPath()), this.getLogger());
+		try {
+			this.wordmanager = new WordManager(Paths.get(this.getDataFolder().getPath()), this.getLogger());
+		} catch (ConfigurationException e) {
+			this.getLogger().warning("Initiation aborted for ChatMonitor. Error in configuration file '" + e.getConfigFileName() + "': " + e.getMessage());
+			// Todo: we need to handle
+		}
 
 		// Initialize command
 		this.getCommand("chatmonitor").setExecutor(new ChatMonitorCommandExecutor(this));
@@ -101,7 +107,7 @@ public class ChatMonitor extends JavaPlugin implements Listener {
 		String cmdName = cmdElements[0].substring(1);
 
 		// See if we should even look at this for the command
-		if (!this.wordmanager.getRelevantCommands().contains(cmdName)) {
+		if (!this.wordmanager.wordCollector.getRelevantCommands(this.wordmanager).contains(cmdName)) {
 			return;
 		}
 

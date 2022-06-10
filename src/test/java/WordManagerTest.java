@@ -8,6 +8,7 @@ import static java.util.Arrays.asList;
 
 import org.junit.Test;
 
+import io.github.mooeypoo.chatmonitor.configs.ConfigurationException;
 import io.github.mooeypoo.chatmonitor.words.WordAction;
 import io.github.mooeypoo.chatmonitor.words.WordManager;
 
@@ -43,11 +44,11 @@ public class WordManagerTest {
 	}
 
 	@Test
-	public void testInvalidRules() {
+	public void testInvalidRules() throws ConfigurationException {
 		WordManager wordManager = new WordManager(
 			Paths.get("src","test","resources", "invalidrule"), "test_", Logger.getLogger("chat_monitor")
 		);
-		
+
 		try {
 			wordManager.processAllWords("There is a validword match here from a problematic invalid rule");
 		} catch (Exception e) {
@@ -81,8 +82,8 @@ public class WordManagerTest {
 		// Check that wordManager.getRelevantCommands() has all commands that have words in them
 		List<String> expectedRelevantCommands = asList("me", "tell");
 		assertTrue(
-			wordManager.getRelevantCommands().containsAll(expectedRelevantCommands) &&
-			expectedRelevantCommands.containsAll(wordManager.getRelevantCommands())
+			wordManager.wordCollector.getRelevantCommands(wordManager).containsAll(expectedRelevantCommands) &&
+			expectedRelevantCommands.containsAll(wordManager.wordCollector.getRelevantCommands(wordManager))
 		);
 	}
 }
