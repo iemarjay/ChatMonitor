@@ -14,6 +14,7 @@ import io.github.mooeypoo.chatmonitor.configs.ConfigManager;
 import io.github.mooeypoo.chatmonitor.configs.ConfigurationException;
 import io.github.mooeypoo.chatmonitor.words.ConfigLoader;
 import io.github.mooeypoo.chatmonitor.words.WordAction;
+import io.github.mooeypoo.chatmonitor.words.WordConfig;
 import io.github.mooeypoo.chatmonitor.words.WordManager;
 
 public class WordManagerTest {
@@ -86,10 +87,11 @@ public class WordManagerTest {
 	@NotNull
 	private WordManager newWordManager(Path path) throws ConfigurationException {
 		final ConfigManager configManager = new ConfigManager(path, "test_");
-		final ConfigLoader chat_monitor = new ConfigLoader(configManager, Logger.getLogger("chat_monitor"));
+		final ConfigLoader configLoader = new ConfigLoader(configManager, Logger.getLogger("chat_monitor"));
+		WordConfig wordConfig = configLoader.collectWords();
 		return new WordManager(
-				Logger.getLogger("chat_monitor"), configManager, chat_monitor.collectWords().wordMap(), chat_monitor.collectWords().wordsInCommandsMap()
-		);
+				Logger.getLogger("chat_monitor"), wordConfig.wordMap(), wordConfig.wordsInCommandsMap(),
+				wordConfig.configGroupData());
 	}
 }
 

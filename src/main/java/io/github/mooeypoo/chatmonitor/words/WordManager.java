@@ -17,38 +17,25 @@ import io.github.mooeypoo.chatmonitor.configs.ConfigurationException;
 import io.github.mooeypoo.chatmonitor.configs.GroupConfigInterface;
 
 public class WordManager {
-	private Logger logger;
+	private final Logger logger;
 	private Map<String, String> wordmap = new HashMap<>();
 	private Map<String, Set<String>> mapWordsInCommands = new HashMap<>();
-	private List<String> relevantCommands = new ArrayList<>();
-	private ConfigManager configManager;
+	private final Map<String, GroupConfigInterface> configGroupData;
 
-	// Used for testing
-	public WordManager(Logger logger, ConfigManager configManager, Map<String, String> wordmap, Map<String, Set<String>> mapWordsInCommands) {
+	public WordManager(
+			Logger logger,
+			Map<String,
+			String> wordmap,
+			Map<String,
+			Set<String>> mapWordsInCommands,
+			Map<String,
+			GroupConfigInterface> configGroupData) {
 		this.logger = logger;
-		this.configManager = configManager;
 		this.wordmap = wordmap;
 		this.mapWordsInCommands = mapWordsInCommands;
+		this.configGroupData = configGroupData;
 	}
-	/**
-	 * Reload the lists and re-process the groups from the config files.
-	 */
-	public void reload() {
-		// Reset lists
-		this.wordmap.clear();
-		this.mapWordsInCommands.clear();
-		this.relevantCommands.clear();
-		
-		// Refresh all configs 
-		try {
-			this.configManager.reload();
-		} catch (ConfigurationException e) {
-			logger.warning("Reload loading default config. Error in configuration file '" + e.getConfigFileName() + "': " + e.getMessage());
-		}
 
-		// Redo word collection
-//		this.configLoader.collectWords();
-	}
 	
 	/**
 	 * Process the given message to see if it triggers a matching word
@@ -111,7 +98,7 @@ public class WordManager {
 		}
 
 		try {
-			GroupConfigInterface config = this.configManager.getGroupConfigData(group);
+			GroupConfigInterface config = getGroupConfigData(group);
 
 			if (config == null) {
 				return null;
@@ -131,6 +118,10 @@ public class WordManager {
 			logger.warning("Aborting generating action. Error in configuration file '" + e.getConfigFileName() + "': " + e.getMessage());
 			return null;
 		}
+	}
+
+	private GroupConfigInterface getGroupConfigData(String group) throws ConfigurationException {
+		return this.configGroupData.get(group);
 	}
 
 	/**

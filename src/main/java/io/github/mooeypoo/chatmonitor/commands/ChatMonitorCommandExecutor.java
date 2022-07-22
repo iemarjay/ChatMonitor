@@ -43,7 +43,7 @@ public class ChatMonitorCommandExecutor  implements CommandExecutor {
 			}
 
 			this.outputToPlayerAndConsole("Reloading configuration files", sender);
-			this.plugin.getWordManager().reload();
+			this.plugin.reloadWordManager();
 			this.outputToPlayerAndConsole("Reload complete.", sender);
 			return true;
 		} else if (args[0].equalsIgnoreCase("test")) {

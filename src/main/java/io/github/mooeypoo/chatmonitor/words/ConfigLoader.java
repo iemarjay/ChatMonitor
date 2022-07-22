@@ -28,10 +28,12 @@ public class ConfigLoader {
         Set<String> groups = this.configManager.getGroupNames();
         Map<String, String> wordMap = new HashMap<>();
         Map<String, Set<String>> wordsInCommandsMap = new HashMap<>();
+        Map<String, GroupConfigInterface> groupConfigData = new HashMap<>();
 
         for (String groupName : groups) {
             try {
                 GroupConfigInterface groupConfig = this.configManager.getGroupConfigData(groupName);
+                groupConfigData.put(groupName, groupConfig);
 
                 for (String word : groupConfig.words()) {
                     // Save in the word map, so we can find the group from the matched word
@@ -46,7 +48,7 @@ public class ConfigLoader {
             }
         }
 
-        return new WordConfig(wordMap, wordsInCommandsMap);
+        return new WordConfig(wordMap, wordsInCommandsMap, groupConfigData);
     }
 
     /**
