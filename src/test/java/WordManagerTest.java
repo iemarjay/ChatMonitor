@@ -1,22 +1,25 @@
 import static org.junit.Assert.*;
 
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.logging.Logger;
 
 import static java.util.Arrays.asList;
 
+import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
+import io.github.mooeypoo.chatmonitor.configs.ConfigManager;
+import io.github.mooeypoo.chatmonitor.configs.ConfigurationException;
+import io.github.mooeypoo.chatmonitor.words.ConfigLoader;
 import io.github.mooeypoo.chatmonitor.words.WordAction;
 import io.github.mooeypoo.chatmonitor.words.WordManager;
 
 public class WordManagerTest {
 	@Test
 	public void testValidAndEmptyWordMatches() throws Exception {
-		WordManager wordManager = new WordManager(
-			Paths.get("src","test","resources", "validrules"), "test_", Logger.getLogger("chat_monitor")
-		);
+		WordManager wordManager = newWordManager(Paths.get("src", "test", "resources", "validrules"));
 		WordAction action = null;
 
 		action = wordManager.processAllWords("there is somebadw0rd in here.");
@@ -33,9 +36,7 @@ public class WordManagerTest {
 
 	@Test
 	public void testEmptyLists() throws Exception {
-		WordManager wordManager = new WordManager(
-				Paths.get("src","test","resources", "emptylist"), "test_", Logger.getLogger("chat_monitor")
-		);
+		WordManager wordManager = newWordManager(Paths.get("src", "test", "resources", "emptylist"));
 		WordAction action = null;
 		
 		action = wordManager.processAllWords("this should be skipped gracefully since there are no words in this list");
@@ -43,11 +44,9 @@ public class WordManagerTest {
 	}
 
 	@Test
-	public void testInvalidRules() {
-		WordManager wordManager = new WordManager(
-			Paths.get("src","test","resources", "invalidrule"), "test_", Logger.getLogger("chat_monitor")
-		);
-		
+	public void testInvalidRules() throws ConfigurationException {
+		WordManager wordManager = newWordManager(Paths.get("src", "test", "resources", "invalidrule"));
+
 		try {
 			wordManager.processAllWords("There is a validword match here from a problematic invalid rule");
 		} catch (Exception e) {
@@ -57,9 +56,7 @@ public class WordManagerTest {
 	
 	@Test
 	public void testMatchesInCommands() throws Exception {
-		WordManager wordManager = new WordManager(
-			Paths.get("src","test","resources", "commands"), "test_", Logger.getLogger("chat_monitor")
-		);
+		WordManager wordManager = newWordManager(Paths.get("src", "test", "resources", "commands"));
 		WordAction action = null;
 
 		action = wordManager.processWordsInCommand("tell", "This badw0rd should be found.");
@@ -83,6 +80,15 @@ public class WordManagerTest {
 		assertTrue(
 			wordManager.getRelevantCommands().containsAll(expectedRelevantCommands) &&
 			expectedRelevantCommands.containsAll(wordManager.getRelevantCommands())
+		);
+	}
+
+	@NotNull
+	private WordManager newWordManager(Path path) throws ConfigurationException {
+		final ConfigManager configManager = new ConfigManager(path, "test_");
+		final ConfigLoader chat_monitor = new ConfigLoader(configManager, Logger.getLogger("chat_monitor"));
+		return new WordManager(
+				Logger.getLogger("chat_monitor"), configManager, chat_monitor.collectWords().wordMap(), chat_monitor.collectWords().wordsInCommandsMap()
 		);
 	}
 }

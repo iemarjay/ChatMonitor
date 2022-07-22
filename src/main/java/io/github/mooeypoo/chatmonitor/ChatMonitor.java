@@ -2,6 +2,7 @@ package io.github.mooeypoo.chatmonitor;
 
 import java.nio.file.Paths;
 import java.util.concurrent.ExecutionException;
+import java.util.logging.Logger;
 
 import org.apache.maven.artifact.versioning.ComparableVersion;
 import org.bukkit.Bukkit;
@@ -15,8 +16,11 @@ import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import io.github.mooeypoo.chatmonitor.commands.ChatMonitorCommandExecutor;
+import io.github.mooeypoo.chatmonitor.configs.ConfigManager;
+import io.github.mooeypoo.chatmonitor.configs.ConfigurationException;
 import io.github.mooeypoo.chatmonitor.utils.MessageHandler;
 import io.github.mooeypoo.chatmonitor.utils.UpdateChecker;
+import io.github.mooeypoo.chatmonitor.words.ConfigLoader;
 import io.github.mooeypoo.chatmonitor.words.WordAction;
 import io.github.mooeypoo.chatmonitor.words.WordManager;
 
@@ -26,6 +30,7 @@ public class ChatMonitor extends JavaPlugin implements Listener {
 
 	@Override
 	public void onEnable() {
+		Logger logger = this.getLogger();
 		new UpdateChecker(this, this.spigotResourceId).getVersion(version -> {
             if (!this.getDescription().getVersion().equalsIgnoreCase(version)) {
             	ComparableVersion remoteVersion = new ComparableVersion(version);
@@ -47,23 +52,30 @@ public class ChatMonitor extends JavaPlugin implements Listener {
             	}
             	
             	if (message != null) {
-                    this.getLogger().info(message);
+                    logger.info(message);
             	}
             }
         });
 		
 		// Initialize word list and config
-		this.getLogger().info("Initializing word lists...");
-		this.wordmanager = new WordManager(Paths.get(this.getDataFolder().getPath()), this.getLogger());
+		logger.info("Initializing word lists...");
+		try {
+			final ConfigManager chatMonitor_wordgroup = new ConfigManager(Paths.get(this.getDataFolder().getPath()), "ChatMonitor_wordgroup");
+			final io.github.mooeypoo.chatmonitor.words.WordConfig wordConfig = new ConfigLoader(chatMonitor_wordgroup, logger).collectWords();
+			this.wordmanager = new WordManager(logger, chatMonitor_wordgroup, wordConfig.wordMap(), wordConfig.wordsInCommandsMap());
 
-		// Initialize command
-		this.getCommand("chatmonitor").setExecutor(new ChatMonitorCommandExecutor(this));
 
-		// Connect events
-		PluginManager pm = this.getServer().getPluginManager();
-		pm.registerEvents(this, (this));
+			// Initialize command
+			this.getCommand("chatmonitor").setExecutor(new ChatMonitorCommandExecutor(this));
 
-		this.getLogger().info("ChatMonitor is enabled.");
+			// Connect events
+			PluginManager pm = this.getServer().getPluginManager();
+			pm.registerEvents(this, (this));
+
+			logger.info("ChatMonitor is enabled.");
+		} catch (ConfigurationException e) {
+			logger.warning("Initiation aborted for ChatMonitor. Error in configuration file '" + e.getConfigFileName() + "': " + e.getMessage());
+		}
 	}
 
 	@Override

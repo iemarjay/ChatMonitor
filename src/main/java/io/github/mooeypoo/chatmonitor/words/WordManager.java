@@ -1,9 +1,7 @@
 package io.github.mooeypoo.chatmonitor.words;
 
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -25,21 +23,12 @@ public class WordManager {
 	private List<String> relevantCommands = new ArrayList<>();
 	private ConfigManager configManager;
 
-	public WordManager(Path filepath, Logger logger) {
-		this(filepath, "ChatMonitor_wordgroup", logger);
-	}
-	
 	// Used for testing
-	public WordManager(Path filepath, String prefix, Logger logger) {
-		try {
-			this.logger = logger;
-			this.configManager = new ConfigManager(filepath, prefix);
-			this.collectWords();
-		} catch (ConfigurationException e) {
-			// Todo: bubble exception to caller
-			this.logger.warning("Initiation aborted for ChatMonitor. Error in configuration file '" + e.getConfigFileName() + "': " + e.getMessage());
-
-		}
+	public WordManager(Logger logger, ConfigManager configManager, Map<String, String> wordmap, Map<String, Set<String>> mapWordsInCommands) {
+		this.logger = logger;
+		this.configManager = configManager;
+		this.wordmap = wordmap;
+		this.mapWordsInCommands = mapWordsInCommands;
 	}
 	/**
 	 * Reload the lists and re-process the groups from the config files.
@@ -58,7 +47,7 @@ public class WordManager {
 		}
 
 		// Redo word collection
-		this.collectWords();
+//		this.configLoader.collectWords();
 	}
 	
 	/**
@@ -101,48 +90,9 @@ public class WordManager {
 
 		return this.getWordAction(matched[0], matched[1]);
 	}
-	
-	/**
-	 * Initialize the lists, collect all words and groups from the config files.
-	 */
-	private void collectWords() {
-		// Go over the groups of words
-		Set<String> groups = this.configManager.getGroupNames();
-
-		for (String groupName : groups) {
-			try {
-				GroupConfigInterface groupConfig = this.configManager.getGroupConfigData(groupName);
-
-				for (String word : groupConfig.words()) {
-					// Save in the word map, so we can find the group from the matched word
-					this.wordmap.put(word, groupName);
-
-					// Check if there are commands that this word should be tested against
-					// and add those to the commands map
-					this.collectCommandMap(word, groupConfig.includeCommands());
-				}
-			} catch (ConfigurationException e) {
-				logger.warning("Word group loading defaults. Error in configuration file '" + e.getConfigFileName() + "': " + e.getMessage());
-			}
-		}
-	}
 
 	private Set<String> getAllWords() {
 		return this.wordmap.keySet();
-	}
-	
-	/**
-	 * Collect the relevant commands per word given, based on the group configuration
-	 * Create a map where command names are keys, and the values are a list of all words
-	 * that are included in the groups that include this command.
-	 *
-	 * @param word Given word match
-	 * @param commandsInGroup A set of the commands in the group
-	 */
-	private void collectCommandMap(String word, Set<String> commandsInGroup) {
-		commandsInGroup.stream()
-				.filter(command -> !(command == null || command.isBlank()))
-				.forEach(command -> mapWordsInCommands.computeIfAbsent(command, s -> new HashSet<>()).add(word));
 	}
 
 	/**
