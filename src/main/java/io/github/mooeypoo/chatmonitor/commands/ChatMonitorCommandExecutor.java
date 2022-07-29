@@ -12,6 +12,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import io.github.mooeypoo.chatmonitor.ChatMonitor;
+import io.github.mooeypoo.chatmonitor.configs.ConfigurationException;
 import io.github.mooeypoo.chatmonitor.words.WordAction;
 
 
@@ -43,9 +44,14 @@ public class ChatMonitorCommandExecutor  implements CommandExecutor {
 			}
 
 			this.outputToPlayerAndConsole("Reloading configuration files", sender);
-			this.plugin.reloadWordManager();
-			this.outputToPlayerAndConsole("Reload complete.", sender);
-			return true;
+			try {
+				this.plugin.reloadWordManager();
+				this.outputToPlayerAndConsole("Reload complete.", sender);
+				return true;
+			} catch (ConfigurationException e) {
+				this.outputToPlayerAndConsole("Configuration could not be reloaded"+ e.getMessage(), sender);
+				return false;
+			}
 		} else if (args[0].equalsIgnoreCase("test")) {
 			if (!sender.hasPermission("chatmonitor.cmd.test")) {
 				this.outputToPlayerAndConsole("You do not have permission to invoke the process action.", sender);

@@ -28,7 +28,8 @@ import io.github.mooeypoo.chatmonitor.words.WordManager;
 public class ChatMonitor extends JavaPlugin implements Listener {
 	private WordManager wordmanager;
 	private int spigotResourceId = 87395;
-	private WordConfig wordConfig;
+	private ConfigManager configManager;
+	private ConfigLoader configLoader;
 
 	@Override
 	public void onEnable() {
@@ -62,8 +63,9 @@ public class ChatMonitor extends JavaPlugin implements Listener {
 		// Initialize word list and config
 		logger.info("Initializing word lists...");
 		try {
-			final ConfigManager chatMonitor_wordgroup = new ConfigManager(Paths.get(this.getDataFolder().getPath()), "ChatMonitor_wordgroup");
-			wordConfig = new ConfigLoader(chatMonitor_wordgroup, logger).collectWords();
+			this.configManager = new ConfigManager(Paths.get(this.getDataFolder().getPath()), "ChatMonitor_wordgroup");
+			configLoader = new ConfigLoader(this.configManager, logger);
+			WordConfig wordConfig = configLoader.collectWords();
 			this.wordmanager = new WordManager(logger, wordConfig.wordMap(), wordConfig.wordsInCommandsMap(), wordConfig.configGroupData());
 
 
@@ -203,7 +205,10 @@ public class ChatMonitor extends JavaPlugin implements Listener {
 		return this.wordmanager;
 	}
 
-	public void reloadWordManager() {
-		this.wordmanager = new WordManager(this.getLogger(), wordConfig.wordMap(), wordConfig.wordsInCommandsMap(), wordConfig.configGroupData());
+	public void reloadWordManager() throws ConfigurationException {
+		Logger logger = this.getLogger();
+		configManager.reload();
+		WordConfig wordConfig = configLoader.collectWords();
+		this.wordmanager = new WordManager(logger, wordConfig.wordMap(), wordConfig.wordsInCommandsMap(), wordConfig.configGroupData());
 	}
 }

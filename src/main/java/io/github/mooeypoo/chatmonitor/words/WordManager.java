@@ -11,29 +11,29 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 import javax.annotation.Nonnull;
+import javax.annotation.concurrent.ThreadSafe;
 
-import io.github.mooeypoo.chatmonitor.configs.ConfigManager;
+import com.google.common.collect.ImmutableMap;
+
 import io.github.mooeypoo.chatmonitor.configs.ConfigurationException;
 import io.github.mooeypoo.chatmonitor.configs.GroupConfigInterface;
 
+@ThreadSafe
 public class WordManager {
 	private final Logger logger;
-	private Map<String, String> wordmap = new HashMap<>();
-	private Map<String, Set<String>> mapWordsInCommands = new HashMap<>();
+	private final Map<String, String> wordmap;
+	private final Map<String, Set<String>> mapWordsInCommands;
 	private final Map<String, GroupConfigInterface> configGroupData;
 
 	public WordManager(
 			Logger logger,
-			Map<String,
-			String> wordmap,
-			Map<String,
-			Set<String>> mapWordsInCommands,
-			Map<String,
-			GroupConfigInterface> configGroupData) {
+			Map<String, String> wordmap,
+			Map<String, Set<String>> mapWordsInCommands,
+			Map<String, GroupConfigInterface> configGroupData) {
 		this.logger = logger;
-		this.wordmap = wordmap;
-		this.mapWordsInCommands = mapWordsInCommands;
-		this.configGroupData = configGroupData;
+		this.wordmap = ImmutableMap.copyOf(wordmap);
+		this.mapWordsInCommands = ImmutableMap.copyOf(mapWordsInCommands);
+		this.configGroupData = ImmutableMap.copyOf(configGroupData);
 	}
 
 	
