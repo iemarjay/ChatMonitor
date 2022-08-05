@@ -23,15 +23,15 @@ public class WordManagerTest {
 		WordManager wordManager = newWordManager(Paths.get("src", "test", "resources", "validrules"));
 		WordAction action = null;
 
-		action = wordManager.processAllWords("there is somebadw0rd in here.");
+		action = wordManager.whatToDoWith("there is somebadw0rd in here.");
 		assertEquals(action.getOriginalWord(), "badw0rd");
 		assertEquals(action.getMatchedRule(), "badw[0o]rd");
 
-		action = wordManager.processAllWords("this is a w0rd in a sentence");
+		action = wordManager.whatToDoWith("this is a w0rd in a sentence");
 		assertEquals(action.getOriginalWord(), "w0rd");
 		assertEquals(action.getMatchedRule(), "\\bw0rd\\b");
 
-		action = wordManager.processAllWords("There are no matches here.");
+		action = wordManager.whatToDoWith("There are no matches here.");
 		assertNull(action);
 	}
 
@@ -40,7 +40,7 @@ public class WordManagerTest {
 		WordManager wordManager = newWordManager(Paths.get("src", "test", "resources", "emptylist"));
 		WordAction action = null;
 		
-		action = wordManager.processAllWords("this should be skipped gracefully since there are no words in this list");
+		action = wordManager.whatToDoWith("this should be skipped gracefully since there are no words in this list");
 		assertNull(action);
 	}
 
@@ -49,7 +49,7 @@ public class WordManagerTest {
 		WordManager wordManager = newWordManager(Paths.get("src", "test", "resources", "invalidrule"));
 
 		try {
-			wordManager.processAllWords("There is a validword match here from a problematic invalid rule");
+			wordManager.whatToDoWith("There is a validword match here from a problematic invalid rule");
 		} catch (Exception e) {
 			assertEquals(e.getMessage(), "Error: Could not process rule ((invalid)");
 		}
@@ -60,20 +60,20 @@ public class WordManagerTest {
 		WordManager wordManager = newWordManager(Paths.get("src", "test", "resources", "commands"));
 		WordAction action = null;
 
-		action = wordManager.processWordsInCommand("tell", "This badw0rd should be found.");
+		action = wordManager.whatToDoWith("tell", "This badw0rd should be found.");
 		assertNotNull(action);
 		assertEquals(action.getOriginalWord(), "badw0rd");
 		assertEquals(action.getMatchedRule(), "badw[0o]rd");
 
-		action = wordManager.processWordsInCommand("me", "This badw0rd should not be found because the group doesn't specify that command.");
+		action = wordManager.whatToDoWith("me", "This badw0rd should not be found because the group doesn't specify that command.");
 		assertNull(action);
 
-		action = wordManager.processWordsInCommand("tell", "There is no match in the words even though the command itself is evaluated.");
+		action = wordManager.whatToDoWith("tell", "There is no match in the words even though the command itself is evaluated.");
 		assertNull(action);
 
-		action = wordManager.processWordsInCommand("me", "the word justme should match for that command");
+		action = wordManager.whatToDoWith("me", "the word justme should match for that command");
 		assertNotNull(action);
-		action = wordManager.processWordsInCommand("tell", "the word justme should NOT match for that command");
+		action = wordManager.whatToDoWith("tell", "the word justme should NOT match for that command");
 		assertNull(action);
 		
 		// Check that wordManager.getRelevantCommands() has all commands that have words in them
@@ -90,7 +90,7 @@ public class WordManagerTest {
 		final ConfigLoader configLoader = new ConfigLoader(configManager, Logger.getLogger("chat_monitor"));
 		WordConfig wordConfig = configLoader.collectWords();
 		return new WordManager(
-				Logger.getLogger("chat_monitor"), wordConfig.wordMap(), wordConfig.wordsInCommandsMap(),
+				Logger.getLogger("chat_monitor"), wordConfig.patternToPatternGroup(), wordConfig.commandToPatterns(),
 				wordConfig.configGroupData());
 	}
 }

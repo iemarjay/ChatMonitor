@@ -1,8 +1,5 @@
 package io.github.mooeypoo.chatmonitor.words;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
@@ -21,18 +18,18 @@ import io.github.mooeypoo.chatmonitor.configs.GroupConfigInterface;
 @ThreadSafe
 public class WordManager {
 	private final Logger logger;
-	private final Map<String, String> wordmap;
-	private final Map<String, Set<String>> mapWordsInCommands;
+	private final Map<String, String> patternToPatternGroup;
+	private final Map<String, Set<String>> commandToPatterns;
 	private final Map<String, GroupConfigInterface> configGroupData;
 
 	public WordManager(
 			Logger logger,
-			Map<String, String> wordmap,
-			Map<String, Set<String>> mapWordsInCommands,
+			Map<String, String> patternToPatternGroup,
+			Map<String, Set<String>> commandToPatterns,
 			Map<String, GroupConfigInterface> configGroupData) {
 		this.logger = logger;
-		this.wordmap = ImmutableMap.copyOf(wordmap);
-		this.mapWordsInCommands = ImmutableMap.copyOf(mapWordsInCommands);
+		this.patternToPatternGroup = ImmutableMap.copyOf(patternToPatternGroup);
+		this.commandToPatterns = ImmutableMap.copyOf(commandToPatterns);
 		this.configGroupData = ImmutableMap.copyOf(configGroupData);
 	}
 
@@ -44,7 +41,7 @@ public class WordManager {
 	 * @param chatMessage Given message
 	 * @return Details of the matched word from any of the groups, or null if none was matched.
 	 */
-	public WordAction processAllWords(String chatMessage) throws Exception {
+	public WordAction whatToDoWith(String chatMessage) throws Exception {
 		String[] matched = this.getMatchedWord(chatMessage, this.getAllWords());
 
 		if (matched == null) {
@@ -61,14 +58,13 @@ public class WordManager {
 	 * @param commandName The name of the command
 	 * @param fullmessage Given message
 	 * @return Details of the matched word from any of the groups, or null if none was matched.
-	 * @throws Exception 
 	 */
-	public WordAction processWordsInCommand(String commandName, String fullmessage) throws Exception {
-		if (!this.mapWordsInCommands.containsKey(commandName)) {	
+	public WordAction whatToDoWith(String commandName, String fullmessage) throws Exception {
+		if (!this.commandToPatterns.containsKey(commandName)) {
 			return null;
 		}
 
-		Set<String> wordListForThisCommand = this.mapWordsInCommands.get(commandName);
+		Set<String> wordListForThisCommand = this.commandToPatterns.get(commandName);
 		
 		String[] matched = this.getMatchedWord(fullmessage, wordListForThisCommand);
 		if (matched == null) {
@@ -79,7 +75,7 @@ public class WordManager {
 	}
 
 	private Set<String> getAllWords() {
-		return this.wordmap.keySet();
+		return this.patternToPatternGroup.keySet();
 	}
 
 	/**
@@ -92,7 +88,7 @@ public class WordManager {
 	 */
 	private WordAction getWordAction(String matchedRule, String originalWord) {
 		// Find the group this word is in
-		String group = this.wordmap.get(matchedRule);
+		String group = this.patternToPatternGroup.get(matchedRule);
 		if (group == null) {
 			return null; // Todo: throw exception
 		}
@@ -164,6 +160,6 @@ public class WordManager {
 	 * @return List of commands that have words that may match in a string
 	 */
 	public Set<String> getRelevantCommands() {
-		return this.mapWordsInCommands.keySet();
+		return this.commandToPatterns.keySet();
 	}
 }

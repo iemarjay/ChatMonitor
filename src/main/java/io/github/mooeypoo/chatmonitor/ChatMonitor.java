@@ -66,7 +66,7 @@ public class ChatMonitor extends JavaPlugin implements Listener {
 			this.configManager = new ConfigManager(Paths.get(this.getDataFolder().getPath()), "ChatMonitor_wordgroup");
 			configLoader = new ConfigLoader(this.configManager, logger);
 			WordConfig wordConfig = configLoader.collectWords();
-			this.wordmanager = new WordManager(logger, wordConfig.wordMap(), wordConfig.wordsInCommandsMap(), wordConfig.configGroupData());
+			this.wordmanager = new WordManager(logger, wordConfig.patternToPatternGroup(), wordConfig.commandToPatterns(), wordConfig.configGroupData());
 
 
 			// Initialize command
@@ -97,7 +97,7 @@ public class ChatMonitor extends JavaPlugin implements Listener {
 
 		String msgFromPlayer = event.getMessage();
 		try {
-			WordAction action = this.wordmanager.processAllWords(msgFromPlayer);
+			WordAction action = this.wordmanager.whatToDoWith(msgFromPlayer);
 
 			if (action != null && !this.processResponse(action, p, msgFromPlayer)) {
 				event.setCancelled(true);
@@ -122,7 +122,7 @@ public class ChatMonitor extends JavaPlugin implements Listener {
 		}
 
 		try {
-			WordAction action = this.wordmanager.processWordsInCommand(cmdName, event.getMessage());
+			WordAction action = this.wordmanager.whatToDoWith(cmdName, event.getMessage());
 
 			if (action != null && !this.processResponse(action, event.getPlayer(), event.getMessage())) {
 				event.setCancelled(true);
@@ -209,6 +209,6 @@ public class ChatMonitor extends JavaPlugin implements Listener {
 		Logger logger = this.getLogger();
 		configManager.reload();
 		WordConfig wordConfig = configLoader.collectWords();
-		this.wordmanager = new WordManager(logger, wordConfig.wordMap(), wordConfig.wordsInCommandsMap(), wordConfig.configGroupData());
+		this.wordmanager = new WordManager(logger, wordConfig.patternToPatternGroup(), wordConfig.commandToPatterns(), wordConfig.configGroupData());
 	}
 }

@@ -70,7 +70,7 @@ public class ChatMonitorCommandExecutor  implements CommandExecutor {
 			// Send to wordmanager
 			WordAction action = null;
 			try {
-				action = this.plugin.getWordManager().processAllWords(testString);
+				action = this.plugin.getWordManager().whatToDoWith(testString);
 			} catch (Exception e) {
 				this.outputToPlayerOrConsole("Error testing given text. Please see your console for more information.", sender);
 				this.plugin.getLogger().info(e.getMessage());
